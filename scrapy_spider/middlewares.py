@@ -18,7 +18,7 @@ def retrieve_ip():
 
 def set_new_ip():
 	with Controller.from_port(port=9051) as controller:
-		controller.authenticate(password="yhbyhb") 
+		controller.authenticate(password="1234")
 		controller.signal(Signal.NEWNYM)
 				
 class ProxyMiddleware(object):  #ProxyMiddleware_try_with_print(object):#
@@ -27,17 +27,19 @@ class ProxyMiddleware(object):  #ProxyMiddleware_try_with_print(object):#
 		'''
 		> short version: replace everything in this def by: 
 		'''
-
 		set_new_ip()
 		request.meta['proxy'] = 'http://127.0.0.1:8118'
-		
+		#my_ip = retrieve_ip()
+		#print("IP visible through Tor (stem)", my_ip.get('http://httpbin.org/ip').text)
 		'''
-		> long verion : 
-		the print display the IP address, to show that Tor change it 		
+		> long verion :
+
+
+		#the print display the IP address, to show that Tor change it
 
 		print("\n\nProxyMiddleware: Start")		
 		site = 'http://httpbin.org/ip'
-		
+
 		# get public IP
 		print("my normal public IP", requests.get(site).text)
 		
@@ -55,4 +57,4 @@ class ProxyMiddleware(object):  #ProxyMiddleware_try_with_print(object):#
 		print("proxy used: ", request.meta['proxy'])
 		
 		print("\n\nProxyMiddleware: End")	
-		'''
+        '''
