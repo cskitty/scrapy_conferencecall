@@ -29,8 +29,8 @@ class ProxyMiddleware(object):  #ProxyMiddleware_try_with_print(object):#
 		'''
 		set_new_ip()
 		request.meta['proxy'] = 'http://127.0.0.1:8118'
-		#my_ip = retrieve_ip()
-		#print("IP visible through Tor (stem)", my_ip.get('http://httpbin.org/ip').text)
+		my_ip = retrieve_ip()
+		print("IP visible through Tor (stem)", my_ip.get('http://httpbin.org/ip').text)
 		'''
 		> long verion :
 
