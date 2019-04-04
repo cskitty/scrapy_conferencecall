@@ -7,6 +7,7 @@ from stem import Signal
 from stem.control import Controller
 import requests
 from scrapy import signals
+import time
 
 def retrieve_ip():
 	# get info (IP...) from current connection 
@@ -23,14 +24,41 @@ def set_new_ip():
 				
 class ProxyMiddleware(object):  #ProxyMiddleware_try_with_print(object):#
 
+	# initialize some
+	# holding variables
+	oldIP = "0.0.0.0"
+	newIP = "0.0.0.0"
+
+	# seconds between
+	# IP address checks
+	secondsBetweenChecks = 2
+
 	def process_request(self, request, spider):
 		'''
 		> short version: replace everything in this def by: 
 		'''
-		set_new_ip()
+		if self.newIP == "0.0.0.0":
+			set_new_ip()
+			my_ip = retrieve_ip()
+			self.newIP = my_ip.get('http://httpbin.org/ip').text
+		else:
+			set_new_ip()
+			my_ip = retrieve_ip()
+			self.oldIP = self.newIP
+			self.newIP = my_ip.get('http://httpbin.org/ip').text
+
+		retryCount = 0
+		while self.oldIP == self.newIP and retryCount < 10:
+			retryCount += 1
+			time.sleep(self.secondsBetweenChecks)
+			# obtain the current IP address
+			self.oldIP = self.newIP
+			self.newIP = my_ip.get('http://httpbin.org/ip').text
+
 		request.meta['proxy'] = 'http://127.0.0.1:8118'
 		my_ip = retrieve_ip()
-		print("IP visible through Tor (stem)", my_ip.get('http://httpbin.org/ip').text)
+		print(" IP visible through Tor (stem)", my_ip.get('http://httpbin.org/ip').text)
+
 		'''
 		> long verion :
 
