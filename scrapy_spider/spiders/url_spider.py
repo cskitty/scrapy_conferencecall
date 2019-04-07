@@ -59,4 +59,5 @@ class UrlSpider(scrapy.Spider):
             item['title'] = title
             item['time'] = timestamp
             item['page'] = page
+            item['text'] = ""
             yield item
