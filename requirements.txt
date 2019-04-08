@@ -6,3 +6,4 @@ stem
 scrapy
 scrapy_fake_useragent 
 python-slugify
+bs4

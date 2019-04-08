@@ -13,7 +13,7 @@ from bson.objectid import ObjectId
 
 class ScrapySpiderPipeline(object):
     def __init__(self):
-        client = pymongo.MongoClient('localhost', 27017)
+        client = pymongo.MongoClient('MelodyLinux', 27017)
         db = client['conference_call']
         #self.collection = db['test']
         self.collection = db['crawl']
@@ -39,6 +39,9 @@ class ScrapySpiderPipeline(object):
 
     def update_earnings(self, row):
         return self.earnings_collection.update_one({'ticker': row['ticker']}, {"$set":row}, upsert=False)
+
+    def get_earnings_collection(self):
+        return self.earnings_collection
 
     def process_item(self, item, spider):
         valid = True
