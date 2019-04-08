@@ -4,11 +4,11 @@ from scrapy_spider.pipelines import ScrapySpiderPipeline
 
 class SeleniumSpider(scrapy.Spider):
     name = "conference_spider"
-    download_delay = 5.0
+    download_delay = 1.0
     custom_settings = {
-            #'LOG_LEVEL': 'CRITICAL', # 'DEBUG'
+            'LOG_LEVEL': 'DEBUG', #'CRITICAL', #
             'LOG_ENABLED': True,
-            'DOWNLOAD_DELAY': 5 # 0.25 == 250 ms of delay, 1 == 1000ms of delay, etc.
+            'DOWNLOAD_DELAY':1 # 0.25 == 250 ms of delay, 1 == 1000ms of delay, etc.
     }
 
     def start_requests(self):

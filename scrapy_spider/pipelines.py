@@ -17,16 +17,28 @@ class ScrapySpiderPipeline(object):
         db = client['conference_call']
         #self.collection = db['test']
         self.collection = db['crawl']
+        self.earnings_collection = db['earnings']
 
     def get_unique_page_set(self):
         rows = list(self.collection.find({}, {"_id": 0, "page": 1}))
         return set([v['page'] for v in rows])
+
+    def get_unique_ticker_set_from_url_col(self):
+        rows = list(self.collection.find({}, {"_id": 0, "ticker": 1}))
+        return set([v['ticker'] for v in rows])
+
+    def get_unique_ticker_set_from_earnings_col(self):
+        rows = list(self.earnings_collection.find({}, {"_id": 0, "ticker": 1}))
+        return set([v['ticker'] for v in rows])
 
     def get_urls_from_page(self, page):
         return self.collection.find({"page": page})
 
     def update_with_text(self, id, text):
         return self.collection.update_one({'_id': ObjectId(id)}, {"$set":{"text": text}}, upsert=False)
+
+    def update_earnings(self, row):
+        return self.earnings_collection.update_one({'ticker': row['ticker']}, {"$set":row}, upsert=False)
 
     def process_item(self, item, spider):
         valid = True

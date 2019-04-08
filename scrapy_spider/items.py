@@ -16,4 +16,17 @@ class ScrapySpiderItem(scrapy.Item):
     url = Field()
     time = Field()
     page = Field()
+    text = Field()
+    pass
+
+
+class EpsItem(scrapy.Item):
+    # define the fields for your item here like:
+    # name = scrapy.Field()
+    ticker = Field()
+    title = Field()
+    date = Field()
+    time = Field()
+    eps = Field()
+    revenue = Field()
     pass
