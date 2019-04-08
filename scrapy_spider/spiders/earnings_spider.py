@@ -21,17 +21,12 @@ class EarningsSpider(scrapy.Spider):
         downloaded_tickers = self.pipeline.get_unique_ticker_set_from_earnings_col()
 
         #print("all tickers ", all_tickers)
-        i = 0
         for ticker in all_tickers:
             if ticker in downloaded_tickers:
                 print("already downloaded ", ticker)
                 continue
             else:
                 print('downloading for ticker ', ticker)
-
-                i += 1
-                if i>1:
-                    return
                 download_url = 'https://seekingalpha.com/symbol/'+ticker+'/earnings/estimates_data?data_type=eps'
                 yield scrapy.Request(url=download_url, callback=self.eps_parse, meta={"ticker":ticker}, headers={'Referer':'https://seekingalpha.com/symbol/' + ticker + '/earnings', 'x-requested-with': 'XMLHttpRequest'})
 
