@@ -63,8 +63,8 @@ sudo apt-get update
 sudo apt-get install -y mongodb-org  
 
 ###launch as daemon:  
-sudo ln -sf /opt/mongodb/ /var/lib/mongodb
-sudo chown mongodb:mongodb /var/lib/mongodb
+sudo ln -sf /opt/mongodb/ /var/lib/mongodb  
+sudo chown mongodb:mongodb /var/lib/mongodb  
 sudo service mongod start  
 
 
