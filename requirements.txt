@@ -7,3 +7,4 @@ scrapy
 scrapy_fake_useragent 
 python-slugify
 bs4
+tqdm

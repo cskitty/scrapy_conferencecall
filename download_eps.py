@@ -5,7 +5,7 @@ from scrapy_spider.pipelines import ScrapySpiderPipeline
 from stem import Signal
 from stem.control import Controller
 import time
-import sys
+from tqdm import tqdm
 
 str = "machine_cookie=1692001658446; __utmc=150447540; _pxvid=f2897aca-5a1c-11e9-ae48-0242ac12000f; __gads=ID=0abb74ffef5a4ae0:T=1554741599:S=ALNI_Ma8HkYJYLl41gT4rpIALQMrcZ2WhQ; h_px=1; OX_plg=pm; __utma=150447540.257821618.1554741599.1554745034.1554754015.3; __utmz=150447540.1554754015.3.3.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided); __utmt=1; __utmb=150447540.1.10.1554754015; _px=GYgc+UIBXvwVd2YgcAi1512G4UdTLy0PJh1oZ7G/TfImelOtrOkXlHySLNxrEnY6Yq+/soEXZRHtYHjCSchlBg==:1000:EKzDtzgUXSjETrzIqF23VM8mq+JHzDgYBxMdvSQRwS2pnH85H2RJQ/8f1skp1jF63LBm+LHjaDojLsjUigAKXX+ExrYIU25R4/+EtUoDAMfL5Uk9MBRP9HST1nOov5cjx/El74baOv+LoT25Z/niACLuz1EOecWPkdtulqAhAYemUYe0bLegFHJDUu585ABsGOlDA7Qy8ED/cXjvzm933ENP7SO13eew/s5ETtuk/zWPXjsK3PAIVKJgNbd7QBOxuN68nXpCOBGacOw8fLn38w==; _px2=eyJ1IjoiZGI3MzY3YzAtNWEzOS0xMWU5LTg4NzQtNjUxNWFkM2M2ZGY3IiwidiI6ImYyODk3YWNhLTVhMWMtMTFlOS1hZTQ4LTAyNDJhYzEyMDAwZiIsInQiOjE1NTQ3NTQ1MTYyNjIsImgiOiIxNzU4NmQ5NGJlOTlmNmM4ZDQyZDgwMzQwYjE5N2UwYWNlNzYxNTMyYWVmYmMyMjBlOTZhMGZlZWQ3YjIyZDcyIn0=; _pxde=9d9ed5371ef993927d29656b892db44ce42812c7f208b2bf0a43c18675cf0178:eyJ0aW1lc3RhbXAiOjE1NTQ3NTQwMjIxNzN"
 cookie = dict(e[:-1].split('=',1) for e in str.split(' '))
@@ -34,23 +34,24 @@ def download_eps(ticker):
     session.headers.update({'referer': 'https://seekingalpha.com/symbol/' + ticker + '/earnings'})
     session.headers.update({'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36'})
     session.headers.update({'x-requested-with': 'XMLHttpRequest'})
-    session.cookies.update(cookie)
+    #session.cookies.update(cookie)
 
 
     downloadError = False
     try:
-        eps = session.get(url)
+        eps = session.get(url).text
     except requests.exceptions.RequestException as e:  # This is the correct syntax
         print(e)
         downloadError = True
 
     print(" IP visible through Tor (stem)", session.get('http://httpbin.org/ip').text)
-
-    eps = session.get(url,).text
+    #print(" get ", eps[:15])
+    #eps = session.get(url).text
 
     retryCount = 0
-    while (downloadError or (eps.text.startswith("<!DOCTYPE"))) and retryCount < 10:
-        session = set_new_ip()
+    while (downloadError or (eps.startswith("<!DOCTYPE"))) and retryCount < 10:
+        set_new_ip()
+        session = retrieve_ip()
         print(" IP visible through Tor (stem)", session.get('http://httpbin.org/ip').text)
 
         retryCount += 1
@@ -59,38 +60,44 @@ def download_eps(ticker):
         session.headers.update({'referer': 'https://seekingalpha.com/symbol/' + ticker + '/earnings'})
         session.headers.update({'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36'})
         session.headers.update({'x-requested-with': 'XMLHttpRequest'})
-        session.cookies.update(cookie)
+        #session.cookies.update(cookie)
 
         downloadError = False
         try:
-            eps = session.get(url)
+            eps = session.get(url).text
         except requests.exceptions.RequestException as e:  # This is the correct syntax
             print(e)
             downloadError = True
 
-    if(not eps.startswith("<!DOCTYPE")):
+    if not eps.startswith("<!DOCTYPE"):
+        """
         row = {}
         row['ticker'] = ticker
-        row['eps'] = eps.text
-        row['rev'] = r.text
+        row['eps'] = eps
+        row['rev'] = ""
+        """
+        doc = pipeline.get_earnings_collection().find_one({'ticker': ticker})
+        if not doc:
+            doc = {}
+            doc['ticker'] = ticker
+            doc['eps'] = ""
 
-        pipeline.get_earnings_collection().update_one({'ticker':  ticker}, {"$set":row}, upsert=True)
+        doc['eps'] = eps
+        print("downloaded for ticker ", ticker, " ... ", eps[:48])
+        pipeline.get_earnings_collection().update_one({'ticker':  ticker}, {"$set":doc}, upsert=True)
+
 
 pipeline = ScrapySpiderPipeline()
+
+"""
 all_tickers = pipeline.get_unique_ticker_set_from_url_col()
 downloaded_tickers = pipeline.get_unique_ticker_set_from_earnings_col()
+toDoList = all_tickers - downloaded_tickers
+"""
 
-i = 10
-for ticker in all_tickers:
-    if ticker in downloaded_tickers:
-        print("already downloaded ", ticker)
-        continue
-    else:
-        print('downloading for ticker ', ticker)
-        download_eps(ticker)
-        i -= 1
-        if i == 0:
-            break
+toDoList = pipeline.get_eps_ticker_set_from_earnings_col()
+for ticker in tqdm(toDoList):
+    download_eps(ticker)
 
 
 """

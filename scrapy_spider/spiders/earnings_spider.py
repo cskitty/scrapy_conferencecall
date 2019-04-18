@@ -6,11 +6,11 @@ from bs4 import BeautifulSoup as soup
 
 class EarningsSpider(scrapy.Spider):
     name = "earnings_spider"
-    download_delay = 3.0
+    download_delay = 1.0
     custom_settings = {
             #'LOG_LEVEL': 'DEBUG', #'CRITICAL', #
-            'LOG_ENABLED': True,
-            'DOWNLOAD_DELAY':3 # 0.25 == 250 ms of delay, 1 == 1000ms of delay, etc.
+            #'LOG_ENABLED': True,
+            'DOWNLOAD_DELAY':1 # 0.25 == 250 ms of delay, 1 == 1000ms of delay, etc.
     }
     pipeline = ScrapySpiderPipeline()
 
@@ -42,7 +42,8 @@ class EarningsSpider(scrapy.Spider):
             doc['rev'] = ""
 
         doc['eps'] = response.text
-        self.pipeline.get_earnings_collection().update_one({'ticker': ticker }, {"$set": doc}, upsert=True)
+        result = self.pipeline.get_earnings_collection().update_one({'ticker': ticker }, {"$set": doc}, upsert=True)
+        print("inserting for ticker  = ", ticker, "matched = ", result.matched_count)
 
     def rev_parse(self, response):
         ticker = response.meta['ticker']
@@ -53,7 +54,8 @@ class EarningsSpider(scrapy.Spider):
             doc['eps'] = ""
 
         doc['rev'] = response.text
-        self.pipeline.get_earnings_collection().update_one({'ticker': ticker}, {"$set": doc}, upsert=True)
+        result = self.pipeline.get_earnings_collection().update_one({'ticker': ticker}, {"$set": doc}, upsert=True)
+        print("inserting for ticker  = ", ticker, "matched = ", result.matched_count)
 
 """"old spider
     def start_requests(self):

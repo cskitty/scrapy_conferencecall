@@ -31,8 +31,21 @@ class ScrapySpiderPipeline(object):
         rows = list(self.earnings_collection.find({}, {"_id": 0, "ticker": 1}))
         return set([v['ticker'] for v in rows])
 
+    def get_revenue_ticker_set_from_earnings_col(self):
+        rows = list(self.earnings_collection.find({"rev": {"$eq": "" }}, {"_id": 0, "ticker": 1}))
+        return set([v['ticker'] for v in rows])
+
+    def get_eps_ticker_set_from_earnings_col(self):
+        rows = list(self.earnings_collection.find({"eps": {"$eq": "" }}, {"_id": 0, "ticker": 1}))
+        return set([v['ticker'] for v in rows])
+
     def get_urls_from_page(self, page):
-        return self.collection.find({"page": page})
+        url_list = []
+        cursors = self.collection.find({"page": page})
+        for cur in cursors:
+            if "2018" in cur['title'] and cur['html'] == "":
+                url_list.append((cur['_id'], cur["url"]))
+        return url_list
 
     def update_with_text(self, id, text):
         return self.collection.update_one({'_id': ObjectId(id)}, {"$set":{"text": text}}, upsert=False)
@@ -42,6 +55,9 @@ class ScrapySpiderPipeline(object):
 
     def get_earnings_collection(self):
         return self.earnings_collection
+
+    def get_conference_call_collection(self):
+        return self.collection
 
     def process_item(self, item, spider):
         valid = True

@@ -72,7 +72,6 @@ sudo service mongod start
 ###launch as a program:  
 mongod --dbpath /opt/mongodb/  
 
-
 ###launch command shell  
 mongodb  
 
